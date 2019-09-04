@@ -11,6 +11,13 @@ describe('Things Endpoints', function() {
     testReviews,
   } = helpers.makeThingsFixtures()
 
+  // make test authentication header... now in test-helpers
+  // function makeAuthHeader(user){
+  //   const token = Buffer.from(`${user.user_name}:${user.password}`)
+  //   .toString('base64')
+  //   return `Basic ${token}`
+  // }
+
   before('make knex instance', () => {
     db = knex({
       client: 'pg',
@@ -86,11 +93,13 @@ describe('Things Endpoints', function() {
   })
 
   describe(`GET /api/things/:thing_id`, () => {
+    const testUser = helpers.makeUsersArray()[1]
     context(`Given no things`, () => {
       it(`responds with 404`, () => {
         const thingId = 123456
         return supertest(app)
           .get(`/api/things/${thingId}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
           .expect(404, { error: `Thing doesn't exist` })
       })
     })
@@ -115,6 +124,7 @@ describe('Things Endpoints', function() {
 
         return supertest(app)
           .get(`/api/things/${thingId}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
           .expect(200, expectedThing)
       })
     })
@@ -137,6 +147,7 @@ describe('Things Endpoints', function() {
       it('removes XSS attack content', () => {
         return supertest(app)
           .get(`/api/things/${maliciousThing.id}`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
           .expect(200)
           .expect(res => {
             expect(res.body.title).to.eql(expectedThing.title)
@@ -147,11 +158,14 @@ describe('Things Endpoints', function() {
   })
 
   describe(`GET /api/things/:thing_id/reviews`, () => {
+    const testUser = helpers.makeUsersArray()[1]
+
     context(`Given no things`, () => {
       it(`responds with 404`, () => {
         const thingId = 123456
         return supertest(app)
           .get(`/api/things/${thingId}/reviews`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
           .expect(404, { error: `Thing doesn't exist` })
       })
     })
@@ -174,6 +188,7 @@ describe('Things Endpoints', function() {
 
         return supertest(app)
           .get(`/api/things/${thingId}/reviews`)
+          .set('Authorization', helpers.makeAuthHeader(testUser))
           .expect(200, expectedReviews)
       })
     })
